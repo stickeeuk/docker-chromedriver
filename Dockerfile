@@ -26,15 +26,6 @@ RUN apt-get -yqq update && \
 RUN curl -sS -o - https://bootstrap.pypa.io/ez_setup.py | python && \
     easy_install -q supervisor
 
-# Install Chrome WebDriver
-RUN CHROMEDRIVER_VERSION=`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE` && \
-    mkdir -p /opt/chromedriver-$CHROMEDRIVER_VERSION && \
-    curl -sS -o /tmp/chromedriver_linux64.zip http://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip && \
-    unzip -qq /tmp/chromedriver_linux64.zip -d /opt/chromedriver-$CHROMEDRIVER_VERSION && \
-    rm /tmp/chromedriver_linux64.zip && \
-    chmod +x /opt/chromedriver-$CHROMEDRIVER_VERSION/chromedriver && \
-    ln -fs /opt/chromedriver-$CHROMEDRIVER_VERSION/chromedriver /usr/local/bin/chromedriver
-
 # Install Google Chrome
 RUN apt-get -yqq update && \
     apt-get -yqq install apt-transport-https gnupg && \
@@ -44,6 +35,16 @@ RUN apt-get -yqq update && \
     apt-get -yqq install ca-certificates google-chrome-stable && \
     apt-get -yqq purge --auto-remove apt-transport-https gnupg && \
     rm -rf /var/lib/apt/lists/*
+
+# Install Chrome WebDriver
+RUN CHROMEDRIVER_RELEASE=$(google-chrome --version | cut -d ' ' -f 3 | cut -d '.' -f 1) && \
+    CHROMEDRIVER_VERSION=`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROMEDRIVER_RELEASE}` && \
+    mkdir -p /opt/chromedriver-$CHROMEDRIVER_VERSION && \
+    curl -sS -o /tmp/chromedriver_linux64.zip http://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip && \
+    unzip -qq /tmp/chromedriver_linux64.zip -d /opt/chromedriver-$CHROMEDRIVER_VERSION && \
+    rm /tmp/chromedriver_linux64.zip && \
+    chmod +x /opt/chromedriver-$CHROMEDRIVER_VERSION/chromedriver && \
+    ln -fs /opt/chromedriver-$CHROMEDRIVER_VERSION/chromedriver /usr/local/bin/chromedriver
 
 # Configure Supervisor
 ADD ./etc/supervisord.conf /etc/
